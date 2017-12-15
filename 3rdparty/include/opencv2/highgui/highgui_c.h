@@ -39,13 +39,17 @@
 //
 //M*/
 
-#ifndef __OPENCV_HIGHGUI_H__
-#define __OPENCV_HIGHGUI_H__
+#ifndef OPENCV_HIGHGUI_H
+#define OPENCV_HIGHGUI_H
 
 #include "opencv2/core/core_c.h"
 #include "opencv2/imgproc/imgproc_c.h"
+#ifdef HAVE_OPENCV_IMGCODECS
 #include "opencv2/imgcodecs/imgcodecs_c.h"
+#endif
+#ifdef HAVE_OPENCV_VIDEOIO
 #include "opencv2/videoio/videoio_c.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -107,6 +111,7 @@ enum
     CV_WND_PROP_AUTOSIZE   = 1, //to change/get window's autosize property
     CV_WND_PROP_ASPECTRATIO= 2, //to change/get window's aspectratio property
     CV_WND_PROP_OPENGL     = 3, //to change/get window's opengl support
+    CV_WND_PROP_VISIBLE    = 4,
 
     //These 2 flags are used by cvNamedWindow and cvSet/GetWindowProperty
     CV_WINDOW_NORMAL       = 0x00000000, //the user can resize the window (no constraint)  / also use to switch a fullscreen window to a normal size
@@ -166,6 +171,7 @@ CVAPI(int) cvCreateTrackbar2( const char* trackbar_name, const char* window_name
 CVAPI(int) cvGetTrackbarPos( const char* trackbar_name, const char* window_name );
 CVAPI(void) cvSetTrackbarPos( const char* trackbar_name, const char* window_name, int pos );
 CVAPI(void) cvSetTrackbarMax(const char* trackbar_name, const char* window_name, int maxval);
+CVAPI(void) cvSetTrackbarMin(const char* trackbar_name, const char* window_name, int minval);
 
 enum
 {
