@@ -11,6 +11,7 @@ copy %path%\3rdparty\src\ncnn\build\src\layer_declaration.h %path%\3rdparty\incl
 copy %path%\3rdparty\src\ncnn\build\src\platform.h %path%\3rdparty\include\ncnn\platform.h
 
 copy %path%\3rdparty\src\ncnn\src\blob.h %path%\3rdparty\include\ncnn\blob.h
+copy %path%\3rdparty\src\ncnn\src\layer.h %path%\3rdparty\include\ncnn\layer.h
 copy %path%\3rdparty\src\ncnn\src\cpu.h %path%\3rdparty\include\ncnn\cpu.h
 copy %path%\3rdparty\src\ncnn\src\mat.h %path%\3rdparty\include\ncnn\mat.h
 copy %path%\3rdparty\src\ncnn\src\net.h %path%\3rdparty\include\ncnn\net.h
