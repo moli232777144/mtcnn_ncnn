@@ -1,5 +1,5 @@
 # 前言
-  ncnn是腾讯优图在七月份开源的，一款手机端极致优化的前向计算框架；开源有几个月了，仍然是开源里的扛把子（给nihui大佬递茶）。之前也测试移植过，这次主要做个整理，鉴于很多人只想在window下搭建并调试，本次主要基于MTCNN的人脸检测例子，进行一次该框架的搭建，构建流程主要采用脚本编写，主要简单演示下流程操作；
+  ncnn是腾讯优图在七月份开源的，一款手机端极致优化的前向计算框架；开源有几个月了，仍然是开源里的扛把子（给nihui大佬递茶）。之前也测试移植过，这次主要做个整理，鉴于很多人只想在window下搭建并调试，本次主要基于MTCNN的人脸检测例子，进行一次该框架的搭建，构建流程主要采用脚本编写，目的在于简单演示下流程操作；
   
 
 ---
@@ -18,7 +18,7 @@
 
 ```
 git clone https://github.com/moli232777144/mtcnn_ncnn.git
-git submodule update --ini
+git submodule update --init
 ```
 
 2. 编译protobuf
@@ -117,8 +117,8 @@ set path=%cd%
 
 ```
 
-一切看似很顺利，麻烦的是，mtcnn模型训练的时候生成的是row-major模型，与ncnn模型默认的col-major不匹配，参考
-[ElegantGod的ncnn](https://github.com/ElegantGod/ncnn)的ncnn改进，提取了其中转化准则文件，放tools目录下的caffe2ncnn.cpp文件，接着替换ncnn的tools/caffe同文件，重新生成caffe2ncnn.exe，并依次执行一次以上模型转换步骤。
+一切看似很顺利，麻烦的是，mtcnn模型是caffe+matlab训练的，生成的是col-major模型，与ncnn模型默认的row-major不匹配，参考
+[ElegantGod的ncnn](https://github.com/ElegantGod/ncnn)的ncnn改进，提取了其中转化准则文件，放tools目录下的caffe2ncnn.cpp文件，接着替换ncnn的tools/caffe同文件，重新生成caffe2ncnn.exe，并依次执行一次以上模型转换步骤。（ps:Android工程里有转换好的模型，懒的朋友直接拷贝）
 
 
 生成正确的ncnn模型后，主要就是建立vs工程进行调试，可以vs新建工程，添加包含目录导入3rdparty的opencv及ncnn头文件目录，接着在链接器里添加两者的lib库引用；
@@ -138,9 +138,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 #4.include头文件目录 
 include_directories(${CMAKE_CURRENT_LIST_DIR}/3rdparty/include/Opencv
-					${CMAKE_CURRENT_LIST_DIR}/3rdparty/include/Opencv/opencv
-					${CMAKE_CURRENT_LIST_DIR}/3rdparty/include/Opencv/opencv2
-					${CMAKE_CURRENT_LIST_DIR}/3rdparty/include/ncnn
+          ${CMAKE_CURRENT_LIST_DIR}/3rdparty/include/Opencv/opencv
+          ${CMAKE_CURRENT_LIST_DIR}/3rdparty/include/Opencv/opencv2
+          ${CMAKE_CURRENT_LIST_DIR}/3rdparty/include/ncnn
                     ${CMAKE_CURRENT_LIST_DIR}/src)
 
 #5.library目录及name名称
@@ -189,8 +189,8 @@ ncnn的安卓端源码范例主要采用的mk文件构造，win开发安卓端�
 
 1. 新建工程
 参考网上配置andorid studio的c++混编环境，新建一个mtcnn—AS的工程；
-2.配置相关文件位置
-- 下载ncnn的release里的安卓端lib，讲arm端的.a文件放至相关jniLibs对应目录下；
+2.配置相关文件位置（ps：最新的lib会更快）
+- 下载ncnn的release里的[安卓端lib](https://github.com/Tencent/ncnn/releases)，讲arm端的.a文件放至相关jniLibs对应目录下；
 - include的头文件放至cpp目录下；
 - 将mtcnn的c++的接口文件放在cpp目录下；
 3.新建jni接口文件，相关方法自行参考网上其他教程；
