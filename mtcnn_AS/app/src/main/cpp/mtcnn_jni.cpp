@@ -125,14 +125,14 @@ Java_com_mtcnn_1as_MTCNN_FaceDetect(JNIEnv *env, jobject instance, jbyteArray im
         faceInfo[14*i+3] = finalBbox[i].x2;//right
         faceInfo[14*i+4] = finalBbox[i].y2;//bottom
         for (int j =0;j<10;j++){
-            faceInfo[14*i+5]=static_cast<int>(finalBbox[i].ppoint[j]);
+            faceInfo[14*i+5+j]=static_cast<int>(finalBbox[i].ppoint[j]);
         }
     }
 
     jintArray tFaceInfo = env->NewIntArray(out_size);
     env->SetIntArrayRegion(tFaceInfo,0,out_size,faceInfo);
     //  LOGD("内部人脸检测完成,导出数据成功");
-
+    delete[] faceInfo;
     env->ReleaseByteArrayElements(imageDate_, imageDate, 0);
     return tFaceInfo;
 }
