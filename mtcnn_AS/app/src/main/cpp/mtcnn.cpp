@@ -224,9 +224,9 @@ void MTCNN::RNet(){
         ncnn::Mat score, bbox;
         ex.extract("prob1", score);
         ex.extract("conv5-2", bbox);
-        if(*(score.data+score.cstep) > threshold[1]){
+        if((float)score[1] > threshold[1]){
             for(int channel=0;channel<4;channel++){
-                it->regreCoord[channel]=bbox.channel(channel)[0];//*(bbox.data+channel*bbox.cstep);
+                it->regreCoord[channel]=(float)bbox[channel];//*(bbox.data+channel*bbox.cstep);
             }
             it->area = (it->x2 - it->x1)*(it->y2 - it->y1);
             it->score = score.channel(1)[0];//*(score.data+score.cstep);
@@ -249,9 +249,9 @@ void MTCNN::ONet(){
         ex.extract("prob1", score);
         ex.extract("conv6-2", bbox);
         ex.extract("conv6-3", keyPoint);
-        if(score.channel(1)[0] > threshold[2]){
+        if((float)score[1] > threshold[2]){
             for(int channel = 0; channel < 4; channel++){
-                it->regreCoord[channel]=bbox.channel(channel)[0];
+                it->regreCoord[channel]=(float)bbox[channel];
             }
             it->area = (it->x2 - it->x1) * (it->y2 - it->y1);
             it->score = score.channel(1)[0];

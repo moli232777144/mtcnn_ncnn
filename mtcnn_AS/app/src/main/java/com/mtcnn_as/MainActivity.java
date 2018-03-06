@@ -98,8 +98,8 @@ public class MainActivity extends Activity {
 
                if(faceInfo.length>1){
                    int faceNum = faceInfo[0];
-                   infoResult.setText("人脸检测时间："+timeDetectFace+" 人脸数目：" + faceNum);
-                   Log.i(TAG, " 检测到的人脸数目：" + faceNum );
+                   infoResult.setText("图宽："+width+"高："+height+"人脸检测时间："+timeDetectFace+" 数目：" + faceNum);
+                   Log.i(TAG, "图宽："+width+"高："+height+" 人脸数目：" + faceNum );
 
                    Bitmap drawBitmap = yourSelectedImage.copy(Bitmap.Config.ARGB_8888, true);
                    for(int i=0;i<faceNum;i++) {
