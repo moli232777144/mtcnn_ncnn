@@ -248,6 +248,8 @@ target_link_libraries(  mtcnn
 ```
 5.成功编译mtcnn的so库，在安卓的MainActivity编写接口使用的相关操作；
 
+ps:android6.0以上机型，部分会出现模型读写到sd卡因权限失败问题;
+若所有图像均未检测到人脸，请检测下sd下是否存储模型的mtcnn目录。
 
 附粗略实测时间（高通625）：
 
