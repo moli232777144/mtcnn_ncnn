@@ -133,7 +133,6 @@ public class MainActivity extends Activity {
                     return;
                 }
 
-
                 Log.i(TAG, "最小人脸："+minFaceSize);
                 mtcnn.SetMinFaceSize(minFaceSize);
                 mtcnn.SetTimeCount(testTimeCount);
