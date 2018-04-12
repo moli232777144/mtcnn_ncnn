@@ -5,20 +5,76 @@
     android:layout_height="fill_parent">
 
     <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <android.support.v7.widget.AppCompatTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="最小人脸大小(大于20): " />
+
+        <android.support.v7.widget.AppCompatEditText
+            android:id="@+id/etMinFaceSize"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="40"
+            android:inputType="number"
+            android:text="40" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <android.support.v7.widget.AppCompatTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="循环测试次数(默认10次): " />
+
+        <android.support.v7.widget.AppCompatEditText
+            android:id="@+id/etTestTimeCount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="10"
+            android:inputType="number"
+            android:text="10" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <android.support.v7.widget.AppCompatTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="线程数填入(1,2,4,8)之一: " />
+
+        <android.support.v7.widget.AppCompatEditText
+            android:id="@+id/etThreadsNumber"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="4"
+            android:inputType="number"
+            android:text="4" />
+    </LinearLayout>
+
+    <LinearLayout
         android:orientation="horizontal"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content">
-
-    <Button
-        android:id="@+id/buttonImage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="选图" />
-    <Button
-        android:id="@+id/buttonDetect"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="识别" />
+        <Button
+            android:id="@+id/buttonImage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="选图" />
+        <Button
+            android:id="@+id/buttonDetect"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="识别" />
     </LinearLayout>
 
     <TextView

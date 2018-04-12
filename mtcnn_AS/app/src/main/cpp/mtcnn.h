@@ -36,6 +36,9 @@ public:
     ~MTCNN();
 	
 	void SetMinFace(int minSize);
+	void SetNumThreads(int numThreads);
+	void SetTimeCount(int timeCount);
+
     void detect(ncnn::Mat& img_, std::vector<Bbox>& finalBbox);
   //  void detection(const cv::Mat& img, std::vector<cv::Rect>& rectangles);
 private:
@@ -55,10 +58,13 @@ private:
     std::vector<Bbox> firstBbox_, secondBbox_,thirdBbox_;
     int img_w, img_h;
 
-private://���ֿɵ�����
+private://部分可调参数
 	const float threshold[3] = { 0.8f, 0.8f, 0.6f };
 	int minsize = 40;
 	const float pre_facetor = 0.709f;
+
+	int count = 10;
+	int num_threads = 4;
 	
 };
 

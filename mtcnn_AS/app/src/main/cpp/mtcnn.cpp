@@ -8,6 +8,18 @@
 
 #include "mtcnn.h"
 
+#include <android/log.h>
+#define TAG "MtcnnCpp"
+#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG,TAG,__VA_ARGS__)
+static unsigned long get_current_time(void)
+{
+    struct timeval tv;
+
+    gettimeofday(&tv, NULL);
+
+    return (tv.tv_sec*1000000 + tv.tv_usec);
+}
+
 bool cmpScore(Bbox lsh, Bbox rsh) {
 	if (lsh.score < rsh.score)
 		return true;
@@ -54,9 +66,20 @@ MTCNN::~MTCNN(){
     Rnet.clear();
     Onet.clear();
 }
+
 void MTCNN::SetMinFace(int minSize){
 	minsize = minSize;
 }
+
+void MTCNN::SetNumThreads(int numThreads){
+    num_threads = numThreads;
+}
+
+void MTCNN::SetTimeCount(int timeCount) {
+    count = timeCount;
+}
+
+
 void MTCNN::generateBbox(ncnn::Mat score, ncnn::Mat location, std::vector<Bbox>& boundingBox_, float scale){
     const int stride = 2;
     const int cellsize = 12;
@@ -196,7 +219,7 @@ void MTCNN::PNet(){
         ncnn::Mat in;
         resize_bilinear(img, in, ws, hs);
         ncnn::Extractor ex = Pnet.create_extractor();
-        ex.set_num_threads(4);
+        ex.set_num_threads(num_threads);
         ex.set_light_mode(true);
         ex.input("data", in);
         ncnn::Mat score_, location_;
@@ -218,7 +241,7 @@ void MTCNN::RNet(){
         ncnn::Mat in;
         resize_bilinear(tempIm, in, 24, 24);
         ncnn::Extractor ex = Rnet.create_extractor();
-        ex.set_num_threads(4);
+        ex.set_num_threads(num_threads);
         ex.set_light_mode(true);
         ex.input("data", in);
         ncnn::Mat score, bbox;
@@ -242,7 +265,7 @@ void MTCNN::ONet(){
         ncnn::Mat in;
         resize_bilinear(tempIm, in, 48, 48);
         ncnn::Extractor ex = Onet.create_extractor();
-        ex.set_num_threads(4);
+        ex.set_num_threads(num_threads);
         ex.set_light_mode(true);
         ex.input("data", in);
         ncnn::Mat score, bbox, keyPoint;
@@ -264,34 +287,65 @@ void MTCNN::ONet(){
         }
     }
 }
+
+#define TIMEOPEN 1 //设置是否开关调试，1为开，其它为关
+
 void MTCNN::detect(ncnn::Mat& img_, std::vector<Bbox>& finalBbox_){
     img = img_;
     img_w = img.w;
     img_h = img.h;
     img.substract_mean_normalize(mean_vals, norm_vals);
 
-    PNet();
-    //the first stage's nms
-    if(firstBbox_.size() < 1) return;
-    nms(firstBbox_, nms_threshold[0]);
-    refine(firstBbox_, img_h, img_w, true);
-    printf("firstBbox_.size()=%d\n", firstBbox_.size());
+#if(TIMEOPEN==1)
+    double total_time = 0.;
+    double min_time = DBL_MAX;
+    double max_time = 0.0;
+    double temp_time = 0.0;
+    unsigned long time_0, time_1;
 
+    for(int i =0 ;i < count; i++) {
+        time_0 = get_current_time();
+#endif
 
-    //second stage
-    RNet();
-    printf("secondBbox_.size()=%d\n", secondBbox_.size());
-    if(secondBbox_.size() < 1) return;
-    nms(secondBbox_, nms_threshold[1]);
-    refine(secondBbox_, img_h, img_w, true);
+        PNet();
+        //the first stage's nms
+        if(firstBbox_.size() < 1) return;
+        nms(firstBbox_, nms_threshold[0]);
+        refine(firstBbox_, img_h, img_w, true);
+        printf("firstBbox_.size()=%d\n", firstBbox_.size());
+        //second stage
+        RNet();
+        printf("secondBbox_.size()=%d\n", secondBbox_.size());
+        if (secondBbox_.size() < 1) return;
+        nms(secondBbox_, nms_threshold[1]);
+        refine(secondBbox_, img_h, img_w, true);
 
-    //third stage 
-    ONet();
-    printf("thirdBbox_.size()=%d\n", thirdBbox_.size());
-    if(thirdBbox_.size() < 1) return;
-    refine(thirdBbox_, img_h, img_w, true);
-    nms(thirdBbox_, nms_threshold[2], "Min");
-    finalBbox_ = thirdBbox_;
+        //third stage
+        ONet();
+        printf("thirdBbox_.size()=%d\n", thirdBbox_.size());
+        if (thirdBbox_.size() < 1) return;
+        refine(thirdBbox_, img_h, img_w, true);
+        nms(thirdBbox_, nms_threshold[2], "Min");
+        finalBbox_ = thirdBbox_;
+
+#if(TIMEOPEN==1)
+        time_1 = get_current_time();
+        temp_time = ((time_1 - time_0)/1000.0);
+        if(temp_time < min_time)
+        {
+            min_time = temp_time;
+        }
+        if(temp_time > max_time)
+        {
+            max_time = temp_time;
+        }
+        total_time += temp_time;
+
+        LOGD("iter %d/%d cost: %.3f ms\n", i+1, count, temp_time);
+    }
+    LOGD("Time cost:Max %.2fms,Min %.2fms,Avg %.2fms\n", max_time,min_time,total_time/count);
+#endif
+
 }
 
 //void MTCNN::detection(const cv::Mat& img, std::vector<cv::Rect>& rectangles){

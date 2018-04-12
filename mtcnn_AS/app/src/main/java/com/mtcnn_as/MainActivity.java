@@ -12,6 +12,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.widget.AppCompatEditText;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -36,6 +38,12 @@ public class MainActivity extends Activity {
     private TextView infoResult;
     private ImageView imageView;
     private Bitmap yourSelectedImage = null;
+
+    AppCompatEditText etMinFaceSize,etTestTimeCount,etThreadsNumber;
+    private int minFaceSize = 40;
+    private int testTimeCount = 10;
+    private int threadsNumber = 4;
+
 
     private MTCNN mtcnn = new MTCNN();
     /**
@@ -89,9 +97,14 @@ public class MainActivity extends Activity {
         String sdPath = sdDir.toString() + "/mtcnn/";
         mtcnn.FaceDetectionModelInit(sdPath);
 
-
         infoResult = (TextView) findViewById(R.id.infoResult);
         imageView = (ImageView) findViewById(R.id.imageView);
+
+        etMinFaceSize = (AppCompatEditText) findViewById(R.id.etMinFaceSize);
+        etTestTimeCount = (AppCompatEditText) findViewById(R.id.etTestTimeCount);
+        etThreadsNumber = (AppCompatEditText) findViewById(R.id.etThreadsNumber);
+
+
 
         Button buttonImage = (Button) findViewById(R.id.buttonImage);
         buttonImage.setOnClickListener(new View.OnClickListener() {
@@ -109,6 +122,23 @@ public class MainActivity extends Activity {
             public void onClick(View arg0) {
                 if (yourSelectedImage == null)
                     return;
+
+                minFaceSize = Integer.valueOf(TextUtils.isEmpty(etMinFaceSize.getText().toString()) ? "40" : etMinFaceSize.getText().toString());
+                testTimeCount = Integer.valueOf(TextUtils.isEmpty(etTestTimeCount.getText().toString()) ? "10" : etTestTimeCount.getText().toString());
+                threadsNumber = Integer.valueOf(TextUtils.isEmpty(etThreadsNumber.getText().toString()) ? "4" : etThreadsNumber.getText().toString());
+
+                if (threadsNumber != 1&&threadsNumber != 2&&threadsNumber != 4&&threadsNumber != 8){
+                    Log.i(TAG, "线程数："+threadsNumber);
+                    infoResult.setText("线程数必须是（1，2，4，8）之一");
+                    return;
+                }
+
+
+                Log.i(TAG, "最小人脸："+minFaceSize);
+                mtcnn.SetMinFaceSize(minFaceSize);
+                mtcnn.SetTimeCount(testTimeCount);
+                mtcnn.SetThreadsNumber(threadsNumber);
+
                 //检测流程
                 int width = yourSelectedImage.getWidth();
                 int height = yourSelectedImage.getHeight();
@@ -117,11 +147,11 @@ public class MainActivity extends Activity {
                 long timeDetectFace = System.currentTimeMillis();
                 int faceInfo[]=mtcnn.FaceDetect(imageDate,width,height,4);
                 timeDetectFace = System.currentTimeMillis() - timeDetectFace;
-                Log.i(TAG, "人脸检测时间："+timeDetectFace);
+                Log.i(TAG, "人脸平均检测时间："+timeDetectFace/testTimeCount);
 
                if(faceInfo.length>1){
                    int faceNum = faceInfo[0];
-                   infoResult.setText("图宽："+width+"高："+height+"人脸检测时间："+timeDetectFace+" 数目：" + faceNum);
+                   infoResult.setText("图宽："+width+"高："+height+"人脸平均检测时间："+timeDetectFace/testTimeCount+" 数目：" + faceNum);
                    Log.i(TAG, "图宽："+width+"高："+height+" 人脸数目：" + faceNum );
 
                    Bitmap drawBitmap = yourSelectedImage.copy(Bitmap.Config.ARGB_8888, true);
@@ -137,6 +167,12 @@ public class MainActivity extends Activity {
                        paint.setStyle(Paint.Style.STROKE);//不填充
                        paint.setStrokeWidth(5);  //线的宽度
                        canvas.drawRect(left, top, right, bottom, paint);
+                       //画特征点
+                       canvas.drawPoints(new float[]{faceInfo[5+14*i],faceInfo[10+14*i],
+                                                     faceInfo[6+14*i],faceInfo[11+14*i],
+                                                     faceInfo[7+14*i],faceInfo[12+14*i],
+                                                     faceInfo[8+14*i],faceInfo[13+14*i],
+                                                     faceInfo[9+14*i],faceInfo[14+14*i]}, paint);//画多个点
                    }
                    imageView.setImageBitmap(drawBitmap);
                 }else{

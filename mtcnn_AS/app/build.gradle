@@ -16,7 +16,7 @@ android {
         }
         externalNativeBuild {
             cmake {
-                arguments "-DANDROID_TOOLCHAIN=gcc"
+                arguments "-DANDROID_TOOLCHAIN=clang"
                 cFlags "-fopenmp -O2 -fvisibility=hidden -fomit-frame-pointer -fstrict-aliasing -ffunction-sections -fdata-sections -ffast-math "
                 cppFlags "-fopenmp -O2 -fvisibility=hidden -fvisibility-inlines-hidden -fomit-frame-pointer -fstrict-aliasing -ffunction-sections -fdata-sections -ffast-math "
                 cppFlags ""

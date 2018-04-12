@@ -16,6 +16,7 @@ static MTCNN *mtcnn;
 //sdk是否初始化成功
 bool detection_sdk_init_ok = false;
 
+
 extern "C" {
 
 JNIEXPORT jboolean JNICALL
@@ -81,11 +82,13 @@ Java_com_mtcnn_1as_MTCNN_FaceDetect(JNIEnv *env, jobject instance, jbyteArray im
     jbyte *imageDate = env->GetByteArrayElements(imageDate_, NULL);
     if (NULL == imageDate){
         LOGD("导入数据为空，直接返回空");
+        env->ReleaseByteArrayElements(imageDate_, imageDate, 0);
         return NULL;
     }
 
     if(imageWidth<20||imageHeight<20){
         LOGD("导入数据的宽和高小于20，直接返回空");
+        env->ReleaseByteArrayElements(imageDate_, imageDate, 0);
         return NULL;
     }
 
@@ -94,11 +97,12 @@ Java_com_mtcnn_1as_MTCNN_FaceDetect(JNIEnv *env, jobject instance, jbyteArray im
         //图像通道数只能是3或4；
     }else{
         LOGD("图像通道数只能是3或4，直接返回空");
+        env->ReleaseByteArrayElements(imageDate_, imageDate, 0);
         return NULL;
     }
 
-    int32_t minFaceSize=40;
-    mtcnn->SetMinFace(minFaceSize);
+    //int32_t minFaceSize=40;
+    //mtcnn->SetMinFace(minFaceSize);
 
     unsigned char *faceImageCharDate = (unsigned char*)imageDate;
     ncnn::Mat ncnn_img;
@@ -153,5 +157,53 @@ Java_com_mtcnn_1as_MTCNN_FaceDetectionModelUnInit(JNIEnv *env, jobject instance)
     return tDetectionUnInit;
 
 }
+
+
+JNIEXPORT jboolean JNICALL
+Java_com_mtcnn_1as_MTCNN_SetMinFaceSize(JNIEnv *env, jobject instance, jint minSize) {
+    if(!detection_sdk_init_ok){
+        LOGD("人脸检测MTCNN模型SDK未初始化，直接返回");
+        return false;
+    }
+
+    if(minSize<=20){
+        minSize=20;
+    }
+
+    mtcnn->SetMinFace(minSize);
+    return true;
+}
+
+
+JNIEXPORT jboolean JNICALL
+Java_com_mtcnn_1as_MTCNN_SetThreadsNumber(JNIEnv *env, jobject instance, jint threadsNumber) {
+    if(!detection_sdk_init_ok){
+        LOGD("人脸检测MTCNN模型SDK未初始化，直接返回");
+        return false;
+    }
+
+    if(threadsNumber!=1&&threadsNumber!=2&&threadsNumber!=4&&threadsNumber!=8){
+        LOGD("线程只能设置1，2，4，8");
+        return false;
+    }
+
+    mtcnn->SetNumThreads(threadsNumber);
+    return  true;
+}
+
+
+JNIEXPORT jboolean JNICALL
+Java_com_mtcnn_1as_MTCNN_SetTimeCount(JNIEnv *env, jobject instance, jint timeCount) {
+
+    if(!detection_sdk_init_ok){
+        LOGD("人脸检测MTCNN模型SDK未初始化，直接返回");
+        return false;
+    }
+
+    mtcnn->SetTimeCount(timeCount);
+    return true;
+
+}
+
 
 }
