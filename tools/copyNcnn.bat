@@ -17,5 +17,6 @@ copy %path%\3rdparty\src\ncnn\src\mat.h %path%\3rdparty\include\ncnn\mat.h
 copy %path%\3rdparty\src\ncnn\src\net.h %path%\3rdparty\include\ncnn\net.h
 copy %path%\3rdparty\src\ncnn\src\opencv.h %path%\3rdparty\include\ncnn\opencv.h
 copy %path%\3rdparty\src\ncnn\src\paramdict.h %path%\3rdparty\include\ncnn\paramdict.h
+copy %path%\3rdparty\src\ncnn\src\modelbin.h %path%\3rdparty\include\ncnn\modelbin.h
 
 pause

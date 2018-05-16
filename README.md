@@ -1,4 +1,11 @@
 ---
+2018.5.16更新：
+
+- 更新win端及android端的ncnn版本；
+
+---
+
+---
 2018.4.12更新：
 
 
@@ -78,34 +85,7 @@ pause
  
 3.  编译ncnn
 
-修改./3rdparty/src/ncnn目录下的CMakeLists.txt中的add_definitions相关注释，修改后结果如下：
-
-```
-add_definitions(-D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_DEPRECATE)
-#add_definitions(-Wall -Wextra)
-#add_definitions(-fPIC)
-#add_definitions(-Ofast)
-#add_definitions(-ffast-math)
-#add_definitions(-march=native)
-#add_definitions(-flto)
-#add_definitions(-fvisibility=hidden -fvisibility-inlines-hidden)
-```
-
-
-因为 VS2015 只支持 openmp 2.0，所以修改 src/layer/convolution_depthwise.cpp
-
-```
-
-#pragma omp parallel for collapse(2)
-```
-
-去掉 collapse(2)
-
-```
-#pragma omp parallel for
-```
-
-接着修改tools下的ncnn.bat工具，将DProtobuf几个参数替换为自己编译后的protobuf相关目录
+修改tools下的ncnn.bat工具，将DProtobuf几个参数替换为自己编译后的protobuf相关目录
 
 ```
 cd ../3rdparty/src/ncnn
@@ -139,6 +119,7 @@ copy %path%\3rdparty\src\ncnn\src\mat.h %path%\3rdparty\include\ncnn\mat.h
 copy %path%\3rdparty\src\ncnn\src\net.h %path%\3rdparty\include\ncnn\net.h
 copy %path%\3rdparty\src\ncnn\src\opencv.h %path%\3rdparty\include\ncnn\opencv.h
 copy %path%\3rdparty\src\ncnn\src\paramdict.h %path%\3rdparty\include\ncnn\paramdict.h
+copy %path%\3rdparty\src\ncnn\src\modelbin.h %path%\3rdparty\include\ncnn\modelbin.h
 
 pause
 ```
@@ -147,7 +128,7 @@ pause
 接下来首先可以开始转换MTCNN的caffe模型，调用格式为：
 
 caffe2ncnn.exe  xx.prototxt xx.caffemodel xx.param xx.bin
-启动mtcnn2ncnn.bat脚本，即可将mtcnn目录下的model文件都转化为ncnn模型存储方式。
+启动mtcnn2ncnn.bat脚本，即可将mtcnn目录下的model文件都转化为ncnn模型存储方式(如果项目存在旧版prototxt需使用caffe项目中的upgrade_net_proto_text与upgrade_net_proto_binary进行新版转换)。
 ```
 cd ..
 set path=%cd%
@@ -158,7 +139,7 @@ set path=%cd%
 ```
 
 一切看似很顺利，麻烦的是，mtcnn模型是caffe+matlab训练的，生成的是col-major模型，与ncnn模型默认的row-major不匹配，参考
-[ElegantGod的ncnn](https://github.com/ElegantGod/ncnn)的ncnn改进，提取了其中转化准则文件，放tools目录下的caffe2ncnn.cpp文件，接着替换ncnn的tools/caffe同文件，重新生成caffe2ncnn.exe，并依次执行一次以上模型转换步骤。（ps:Android工程里有转换好的模型，懒的朋友直接拷贝）
+[ElegantGod的ncnn](https://github.com/ElegantGod/ncnn)的ncnn改进，提取了其中转化准则文件，放tools目录下的caffe2ncnn.cpp文件，接着替换ncnn的tools/caffe同文件，重新生成caffe2ncnn.exe，并依次执行一次以上模型转换步骤。（ps:models下已包含转换好的模型）
 
 
 生成正确的ncnn模型后，主要就是建立vs工程进行调试，可以vs新建工程，添加包含目录导入3rdparty的opencv及ncnn头文件目录，接着在链接器里添加两者的lib库引用；
@@ -232,7 +213,7 @@ ncnn的安卓端源码范例主要采用的mk文件构造，win开发安卓端�
 参考网上配置andorid studio的c++混编环境，新建一个mtcnn—AS的工程；
 
 2. 配置相关文件位置（ps：最新的lib会更快）
-	- 下载ncnn的release里的[安卓端lib](https://github.com/Tencent/ncnn/releases)，
+	- 下载ncnn的release里的[安卓端lib](https://github.com/Tencent/ncnn/releases)，或者调用tools/build_android.bat
 	- 将arm端的.a文件放至相关jniLibs对应目录下；
 	- include的头文件放至cpp目录下；
 	- 将mtcnn的c++的接口文件放在cpp目录下；

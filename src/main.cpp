@@ -30,7 +30,12 @@ void test_video() {
 		bbox.resize(num_box);
 		for(int i = 0; i < num_box; i++){
 			bbox[i] = cv::Rect(finalBbox[i].x1, finalBbox[i].y1, finalBbox[i].x2 - finalBbox[i].x1 + 1, finalBbox[i].y2 - finalBbox[i].y1 + 1);
-		 }
+		
+			for (int j = 0; j<5; j = j + 1)
+			{
+				cv::circle(frame, cvPoint(finalBbox[i].ppoint[j], finalBbox[i].ppoint[j + 5]), 2, CV_RGB(0, 255, 0), CV_FILLED);
+			}
+		}
 		for (vector<cv::Rect>::iterator it = bbox.begin(); it != bbox.end(); it++) {
 			rectangle(frame, (*it), Scalar(0, 0, 255), 2, 8, 0);
 		}
@@ -64,7 +69,11 @@ int test_picture(){
 	bbox.resize(num_box);
 	for (int i = 0; i < num_box; i++) {
 		bbox[i] = cv::Rect(finalBbox[i].x1, finalBbox[i].y1, finalBbox[i].x2 - finalBbox[i].x1 + 1, finalBbox[i].y2 - finalBbox[i].y1 + 1);
-		
+
+		for (int j = 0; j<5; j = j + 1)
+		{
+			cv::circle(image, cvPoint(finalBbox[i].ppoint[j], finalBbox[i].ppoint[j + 5]), 2, CV_RGB(0, 255, 0), CV_FILLED);
+		}
 	}
 	for (vector<cv::Rect>::iterator it = bbox.begin(); it != bbox.end(); it++) {
 		rectangle(image, (*it), Scalar(0, 0, 255), 2, 8, 0);
