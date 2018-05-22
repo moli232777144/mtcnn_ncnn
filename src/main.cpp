@@ -3,6 +3,7 @@
 
 using namespace cv;
 
+#define MAXFACEOPEN 0 //设置是否开关最大人脸调试，1为开，其它为关
 
 void test_video() {
 	char *model_path = "../models";
@@ -24,7 +25,11 @@ void test_video() {
 		
 		ncnn::Mat ncnn_img = ncnn::Mat::from_pixels(frame.data, ncnn::Mat::PIXEL_BGR2RGB, frame.cols, frame.rows);
 		std::vector<Bbox> finalBbox;
+#if(MAXFACEOPEN==1)
+		mtcnn.detectMaxFace(ncnn_img, finalBbox);
+#else
 		mtcnn.detect(ncnn_img, finalBbox);
+#endif
 		const int num_box = finalBbox.size();
 		std::vector<cv::Rect> bbox;
 		bbox.resize(num_box);
@@ -62,7 +67,12 @@ int test_picture(){
 	image = cv::imread("../sample.jpg");
 	ncnn::Mat ncnn_img = ncnn::Mat::from_pixels(image.data, ncnn::Mat::PIXEL_BGR2RGB, image.cols, image.rows);
 	std::vector<Bbox> finalBbox;
+
+#if(MAXFACEOPEN==1)
+	mtcnn.detectMaxFace(ncnn_img, finalBbox);
+#else
 	mtcnn.detect(ncnn_img, finalBbox);
+#endif
 
 	const int num_box = finalBbox.size();
 	std::vector<cv::Rect> bbox;

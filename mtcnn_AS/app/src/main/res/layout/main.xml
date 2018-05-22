@@ -61,6 +61,7 @@
             android:text="4" />
     </LinearLayout>
 
+
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="fill_parent"
@@ -74,7 +75,17 @@
             android:id="@+id/buttonDetect"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="识别" />
+            android:text="检测" />
+        <ToggleButton
+            android:id="@+id/toggle_bt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:button="@drawable/toggle_btn"
+            android:checked="false"
+            android:text="只检测最大人脸："
+            android:textOff="只检测最大人脸：关"
+            android:textOn="只检测最大人脸：开" />
     </LinearLayout>
 
     <TextView

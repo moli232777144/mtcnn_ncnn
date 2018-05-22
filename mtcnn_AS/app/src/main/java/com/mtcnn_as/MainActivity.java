@@ -17,8 +17,11 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -44,6 +47,7 @@ public class MainActivity extends Activity {
     private int testTimeCount = 10;
     private int threadsNumber = 4;
 
+    private boolean maxFaceSetting = false;
 
     private MTCNN mtcnn = new MTCNN();
     /**
@@ -104,7 +108,22 @@ public class MainActivity extends Activity {
         etTestTimeCount = (AppCompatEditText) findViewById(R.id.etTestTimeCount);
         etThreadsNumber = (AppCompatEditText) findViewById(R.id.etThreadsNumber);
 
-
+        ToggleButton mToggleBt = (ToggleButton) findViewById(R.id.toggle_bt);
+        mToggleBt.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView,
+                                         boolean isChecked) {
+                if (isChecked) {
+                    Toast.makeText(getApplication(), "打开只检测最大人脸功能", Toast.LENGTH_SHORT)
+                            .show();
+                    maxFaceSetting = true;
+                } else {
+                    Toast.makeText(getApplication(), "关闭只检测最大人脸功能", Toast.LENGTH_SHORT)
+                            .show();
+                    maxFaceSetting = false;
+                }
+            }
+        });
 
         Button buttonImage = (Button) findViewById(R.id.buttonImage);
         buttonImage.setOnClickListener(new View.OnClickListener() {
@@ -144,7 +163,15 @@ public class MainActivity extends Activity {
                 byte[] imageDate = getPixelsRGBA(yourSelectedImage);
 
                 long timeDetectFace = System.currentTimeMillis();
-                int faceInfo[]=mtcnn.FaceDetect(imageDate,width,height,4);
+                int faceInfo[] = null;
+                if(!maxFaceSetting) {
+                    faceInfo = mtcnn.FaceDetect(imageDate, width, height, 4);
+                    Log.i(TAG, "检测所有人脸");
+                }
+                else{
+                    faceInfo = mtcnn.MaxFaceDetect(imageDate, width, height, 4);
+                    Log.i(TAG, "检测最大人脸");
+                }
                 timeDetectFace = System.currentTimeMillis() - timeDetectFace;
                 Log.i(TAG, "人脸平均检测时间："+timeDetectFace/testTimeCount);
 
