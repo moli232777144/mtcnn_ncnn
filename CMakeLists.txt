@@ -34,6 +34,13 @@ list(APPEND LINKS ncnn)
 list(APPEND DEPS Ncnn)
 ######
 
+# GTK2
+find_package(GTK2 REQUIRED)
+if (GTK2_FOUND)
+else()
+    MESSAGE(FATAL_ERROR "GTK2 isn't found !!")
+endif()
+
 # OpenCV
 ExternalProject_Add(OpenCV
         GIT_REPOSITORY https://github.com/opencv/opencv.git
