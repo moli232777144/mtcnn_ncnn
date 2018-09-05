@@ -49,6 +49,14 @@ list(APPEND LINKS opencv_highgui)
 list(APPEND DEPS OpenCV)
 ######
 
+# OpenMP
+find_package(OpenMP REQUIRED)
+if (OpenMP_FOUND)
+    list(APPEND LINKS gomp)
+else()
+    MESSAGE(FATAL_ERROR "OpenMP isn't found !!")
+endif()
+
 include_directories(${CMAKE_CURRENT_LIST_DIR}/src)
 
 file(GLOB MTCNN_SRC ${CMAKE_CURRENT_LIST_DIR}/src/*.h
