@@ -474,10 +474,17 @@ void MTCNN::detectMaxFace(ncnn::Mat &img_, std::vector<Bbox> &finalBbox) {
             secondBbox_.clear();
             continue;
         }
-        refine(secondBbox_, img_h, img_w, true);
-        //printf("secondBbox_.size()=%d\n", secondBbox_.size());
 
-        //third stage
+#if 1
+        refine(secondBbox_, img_h, img_w, true);
+        if (secondBbox_.size() > 0) {
+            extractMaxFace(secondBbox_);
+            finalBbox = secondBbox_;//if largest face size is similar,.
+            break;
+        }
+
+#else
+        //Third stage
         ONet();
         if (thirdBbox_.size() < 1) {
             firstBbox_.clear();
@@ -493,6 +500,7 @@ void MTCNN::detectMaxFace(ncnn::Mat &img_, std::vector<Bbox> &finalBbox) {
             finalBbox = thirdBbox_;//if largest face size is similar,.
             break;
         }
+#endif
     }
 
     //printf("firstPreviousBbox_.size()=%d\n", firstPreviousBbox_.size());
