@@ -1,4 +1,11 @@
 ---
+2018.09.15 Update
+
+1. Only detect single face.
+2. Ignore characteristic point.
+3. Support Linux version.
+
+---
 2018.5.22更新：
 
 针对部分场景仅需检测最大的单人脸，新增最大人脸检测测试接口，不同场景整体速度波动将会更大，但单人脸场景提升较明显；
