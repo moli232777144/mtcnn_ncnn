@@ -78,10 +78,13 @@ void MTCNN::generateBbox(ncnn::Mat score, ncnn::Mat location, std::vector<Bbox> 
         for (int col = 0; col < score.w; col++) {
             if (*p > threshold[0]) {
                 bbox.score = *p;
+
+                // Get
                 bbox.x1 = round((stride * col + 1) * inv_scale);
                 bbox.y1 = round((stride * row + 1) * inv_scale);
                 bbox.x2 = round((stride * col + 1 + cellsize) * inv_scale);
                 bbox.y2 = round((stride * row + 1 + cellsize) * inv_scale);
+
                 bbox.area = (bbox.x2 - bbox.x1) * (bbox.y2 - bbox.y1);
                 const int index = row * score.w + col;
                 for (int channel = 0; channel < 4; channel++) {
@@ -100,35 +103,40 @@ void MTCNN::nmsTwoBoxs(vector<Bbox> &boundingBox_, vector<Bbox> &previousBox_, c
     if (boundingBox_.empty()) {
         return;
     }
+
     sort(boundingBox_.begin(), boundingBox_.end(), cmpScore);
+
     float IOU = 0;
     float maxX = 0;
     float maxY = 0;
     float minX = 0;
     float minY = 0;
-    //std::cout << boundingBox_.size() << " ";
+
     for (std::vector<Bbox>::iterator ity = previousBox_.begin(); ity != previousBox_.end(); ity++) {
         for (std::vector<Bbox>::iterator itx = boundingBox_.begin(); itx != boundingBox_.end();) {
             int i = itx - boundingBox_.begin();
             int j = ity - previousBox_.begin();
+
             maxX = std::max(boundingBox_.at(i).x1, previousBox_.at(j).x1);
             maxY = std::max(boundingBox_.at(i).y1, previousBox_.at(j).y1);
             minX = std::min(boundingBox_.at(i).x2, previousBox_.at(j).x2);
             minY = std::min(boundingBox_.at(i).y2, previousBox_.at(j).y2);
-            //maxX1 and maxY1 reuse
-            maxX = ((minX - maxX + 1) > 0) ? (minX - maxX + 1) : 0;
-            maxY = ((minY - maxY + 1) > 0) ? (minY - maxY + 1) : 0;
+
+            int intersectionWidth = ((minX - maxX + 1) > 0) ? (minX - maxX + 1) : 0;
+            int intersectionHeight = ((minY - maxY + 1) > 0) ? (minY - maxY + 1) : 0;
+
             //IOU reuse for the area of two bbox
-            IOU = maxX * maxY;
-            if (!modelname.compare("Union"))
+            IOU = intersectionWidth * intersectionHeight;
+
+            if (!modelname.compare("Union")) {
                 IOU = IOU / (boundingBox_.at(i).area + previousBox_.at(j).area - IOU);
-            else if (!modelname.compare("Min")) {
+            } else if (!modelname.compare("Min")) {
                 IOU = IOU /
                       ((boundingBox_.at(i).area < previousBox_.at(j).area) ? boundingBox_.at(i).area : previousBox_.at(
                               j).area);
             }
+
             if (IOU > overlap_threshold && boundingBox_.at(i).score > previousBox_.at(j).score) {
-                //if (IOU > overlap_threshold) {
                 itx = boundingBox_.erase(itx);
             } else {
                 itx++;
@@ -142,49 +150,64 @@ void MTCNN::nms(std::vector<Bbox> &boundingBox_, const float overlap_threshold, 
     if (boundingBox_.empty()) {
         return;
     }
+
+    // At first, the box with highest score must be found.
     sort(boundingBox_.begin(), boundingBox_.end(), cmpScore);
+
     float IOU = 0;
-    float maxX = 0;
-    float maxY = 0;
-    float minX = 0;
-    float minY = 0;
+    float topLeftMaxX = 0;
+    float topLeftMaxY = 0;
+    float bottomRightMinX = 0;
+    float bottomRightMinY = 0;
     std::vector<int> vPick;
     int nPick = 0;
     std::multimap<float, int> vScores;
+
     const int num_boxes = boundingBox_.size();
     vPick.resize(num_boxes);
+
     for (int i = 0; i < num_boxes; ++i) {
         vScores.insert(std::pair<float, int>(boundingBox_[i].score, i));
     }
+
     while (vScores.size() > 0) {
         int last = vScores.rbegin()->second;
+
+        // Store index of box of hightest score
         vPick[nPick] = last;
         nPick += 1;
+
+        // Filter other boxes with last box
+        // The last box is always filtered out at it == vScores.end() - 1.
         for (std::multimap<float, int>::iterator it = vScores.begin(); it != vScores.end();) {
             int it_idx = it->second;
-            maxX = std::max(boundingBox_.at(it_idx).x1, boundingBox_.at(last).x1);
-            maxY = std::max(boundingBox_.at(it_idx).y1, boundingBox_.at(last).y1);
-            minX = std::min(boundingBox_.at(it_idx).x2, boundingBox_.at(last).x2);
-            minY = std::min(boundingBox_.at(it_idx).y2, boundingBox_.at(last).y2);
-            //maxX1 and maxY1 reuse 
-            maxX = ((minX - maxX + 1) > 0) ? (minX - maxX + 1) : 0;
-            maxY = ((minY - maxY + 1) > 0) ? (minY - maxY + 1) : 0;
-            //IOU reuse for the area of two bbox
-            IOU = maxX * maxY;
+            topLeftMaxX = std::max(boundingBox_.at(it_idx).x1, boundingBox_.at(last).x1);
+            topLeftMaxY = std::max(boundingBox_.at(it_idx).y1, boundingBox_.at(last).y1);
+            bottomRightMinX = std::min(boundingBox_.at(it_idx).x2, boundingBox_.at(last).x2);
+            bottomRightMinY = std::min(boundingBox_.at(it_idx).y2, boundingBox_.at(last).y2);
+
+            int intersectionWidth = ((bottomRightMinX - topLeftMaxX + 1) > 0) ? (bottomRightMinX - topLeftMaxX + 1) : 0;
+            int intersectionHeight= ((bottomRightMinY - topLeftMaxY + 1) > 0) ? (bottomRightMinY - topLeftMaxY + 1) : 0;
+
+            IOU = intersectionWidth * intersectionHeight;
             if (!modelname.compare("Union"))
                 IOU = IOU / (boundingBox_.at(it_idx).area + boundingBox_.at(last).area - IOU);
             else if (!modelname.compare("Min")) {
                 IOU = IOU / ((boundingBox_.at(it_idx).area < boundingBox_.at(last).area) ? boundingBox_.at(it_idx).area
                                                                                          : boundingBox_.at(last).area);
             }
+
             if (IOU > overlap_threshold) {
+                // Drop
                 it = vScores.erase(it);
             } else {
+                // Keep
                 it++;
             }
         }
     }
 
+    // TODO: Remove this
     vPick.resize(nPick);
     std::vector<Bbox> tmp_;
     tmp_.resize(nPick);
@@ -250,6 +273,7 @@ void MTCNN::PNet(float scale) {
     ncnn::Mat in;
     resize_bilinear(img, in, ws, hs);
     ncnn::Extractor ex = Pnet.create_extractor();
+
     ex.set_light_mode(true);
     //sex.set_num_threads(4);
     ex.input("data", in);
@@ -359,6 +383,7 @@ void MTCNN::detect(ncnn::Mat &img_, std::vector<Bbox> &finalBbox_) {
     img_w = img.w;
     img_h = img.h;
     img.substract_mean_normalize(mean_vals, norm_vals);
+    clock_t start_time = clock();
 
     PNet();
     //the first stage's nms
@@ -366,6 +391,9 @@ void MTCNN::detect(ncnn::Mat &img_, std::vector<Bbox> &finalBbox_) {
     nms(firstBbox_, nms_threshold[0]);
     refine(firstBbox_, img_h, img_w, true);
     //printf("firstBbox_.size()=%d\n", firstBbox_.size());
+    clock_t end_time = clock();
+    double total_time = (double) (end_time - start_time) / CLOCKS_PER_SEC;
+    std::cout << "PNet time: " << total_time * 1000 << " ms" << std::endl;
 
 
     //second stage
@@ -399,23 +427,33 @@ void MTCNN::detectMaxFace(ncnn::Mat &img_, std::vector<Bbox> &finalBbox) {
     img_h = img.h;
     img.substract_mean_normalize(mean_vals, norm_vals);
 
-    //pyramid size
+    //Pyramid
+    // Choose shorter side
     float minl = img_w < img_h ? img_w : img_h;
+    // Scale ratio
     float m = (float) MIN_DET_SIZE / minsize;
+
+    // First time scale shorter side
     minl *= m;
+
+    // Second scale ratio
     float factor = pre_facetor;
     vector<float> scales_;
     while (minl > MIN_DET_SIZE) {
+        // store scale ratios
         scales_.push_back(m);
+
+        // Update scaled shorted side
         minl *= factor;
+        // update second scale ratio
         m = m * factor;
     }
-    sort(scales_.begin(), scales_.end());
-    //printf("scales_.size()=%d\n", scales_.size());
+
+    sort(scales_.begin(), scales_.end()); // small => big
 
     //Change the sampling process.
     for (size_t i = 0; i < scales_.size(); i++) {
-        //first stage
+        // First stage
         PNet(scales_[i]);
         nms(firstBbox_, nms_threshold[0]);
         nmsTwoBoxs(firstBbox_, firstPreviousBbox_, nms_threshold[0]);
@@ -425,9 +463,8 @@ void MTCNN::detectMaxFace(ncnn::Mat &img_, std::vector<Bbox> &finalBbox) {
         }
         firstPreviousBbox_.insert(firstPreviousBbox_.end(), firstBbox_.begin(), firstBbox_.end());
         refine(firstBbox_, img_h, img_w, true);
-        //printf("firstBbox_.size()=%d\n", firstBbox_.size());
 
-        //second stage
+        // Second stage
         RNet();
         nms(secondBbox_, nms_threshold[1]);
         nmsTwoBoxs(secondBbox_, secondPreviousBbox_, nms_threshold[0]);
@@ -442,7 +479,6 @@ void MTCNN::detectMaxFace(ncnn::Mat &img_, std::vector<Bbox> &finalBbox) {
 
         //third stage
         ONet();
-        //printf("thirdBbox_.size()=%d\n", thirdBbox_.size());
         if (thirdBbox_.size() < 1) {
             firstBbox_.clear();
             secondBbox_.clear();
