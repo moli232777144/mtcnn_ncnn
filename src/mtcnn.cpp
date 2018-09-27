@@ -74,6 +74,7 @@ void MTCNN::generateBbox(ncnn::Mat score, ncnn::Mat location, std::vector<Bbox> 
     //float *plocal = location.data;
     Bbox bbox;
     float inv_scale = 1.0f / scale;
+#pragma omp parallel for num_threads(4)
     for (int row = 0; row < score.h; row++) {
         for (int col = 0; col < score.w; col++) {
             if (*p > threshold[0]) {
@@ -179,6 +180,7 @@ void MTCNN::nms(std::vector<Bbox> &boundingBox_, const float overlap_threshold, 
 
         // Filter other boxes with last box
         // The last box is always filtered out at it == vScores.end() - 1.
+#pragma omp parallel for num_threads(4)
         for (std::multimap<float, int>::iterator it = vScores.begin(); it != vScores.end();) {
             int it_idx = it->second;
             topLeftMaxX = std::max(boundingBox_.at(it_idx).x1, boundingBox_.at(last).x1);
@@ -225,6 +227,7 @@ void MTCNN::refine(vector<Bbox> &vecBbox, const int &height, const int &width, b
     float bbw = 0, bbh = 0, maxSide = 0;
     float h = 0, w = 0;
     float x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+#pragma omp parallel for num_threads(4)
     for (vector<Bbox>::iterator it = vecBbox.begin(); it != vecBbox.end(); it++) {
         bbw = (*it).x2 - (*it).x1 + 1;
         bbh = (*it).y2 - (*it).y1 + 1;
@@ -275,7 +278,7 @@ void MTCNN::PNet(float scale) {
     ncnn::Extractor ex = Pnet.create_extractor();
 
     ex.set_light_mode(true);
-    //sex.set_num_threads(4);
+    //ex.set_num_threads(4);
     ex.input("data", in);
     ncnn::Mat score_, location_;
     ex.extract("prob1", score_);
@@ -307,7 +310,7 @@ void MTCNN::PNet() {
         ncnn::Mat in;
         resize_bilinear(img, in, ws, hs);
         ncnn::Extractor ex = Pnet.create_extractor();
-        //ex.set_num_threads(2);
+        //ex.set_num_threads(4);
         ex.set_light_mode(true);
         ex.input("data", in);
         ncnn::Mat score_, location_;
@@ -330,12 +333,13 @@ void MTCNN::RNet() {
         ncnn::Mat in;
         resize_bilinear(tempIm, in, 24, 24);
         ncnn::Extractor ex = Rnet.create_extractor();
-        //ex.set_num_threads(2);
+        //ex.set_num_threads(4);
         ex.set_light_mode(true);
         ex.input("data", in);
         ncnn::Mat score, bbox;
         ex.extract("prob1", score);
         ex.extract("conv5-2", bbox);
+        printf("RNet, score[1]:%f\n", (float)score[1]);
         if ((float) score[1] > threshold[1]) {
             for (int channel = 0; channel < 4; channel++) {
                 it->regreCoord[channel] = (float) bbox[channel];//*(bbox.data+channel*bbox.cstep);
@@ -355,7 +359,7 @@ void MTCNN::ONet() {
         ncnn::Mat in;
         resize_bilinear(tempIm, in, 48, 48);
         ncnn::Extractor ex = Onet.create_extractor();
-        //ex.set_num_threads(2);
+        //ex.set_num_threads(4);
         ex.set_light_mode(true);
         ex.input("data", in);
         ncnn::Mat score, bbox, keyPoint;
@@ -455,20 +459,20 @@ void MTCNN::detectMaxFace(ncnn::Mat &img_, std::vector<Bbox> &finalBbox) {
     for (size_t i = 0; i < scales_.size(); i++) {
         // First stage
         PNet(scales_[i]);
-        nms(firstBbox_, nms_threshold[0]);
-        nmsTwoBoxs(firstBbox_, firstPreviousBbox_, nms_threshold[0]);
+        //nms(firstBbox_, nms_threshold[0]);
+        //nmsTwoBoxs(firstBbox_, firstPreviousBbox_, nms_threshold[0]);
         if (firstBbox_.size() < 1) {
             firstBbox_.clear();
             continue;
         }
-        firstPreviousBbox_.insert(firstPreviousBbox_.end(), firstBbox_.begin(), firstBbox_.end());
+        //firstPreviousBbox_.insert(firstPreviousBbox_.end(), firstBbox_.begin(), firstBbox_.end());
         refine(firstBbox_, img_h, img_w, true);
 
         // Second stage
         RNet();
-        nms(secondBbox_, nms_threshold[1]);
-        nmsTwoBoxs(secondBbox_, secondPreviousBbox_, nms_threshold[0]);
-        secondPreviousBbox_.insert(secondPreviousBbox_.end(), secondBbox_.begin(), secondBbox_.end());
+        //nms(secondBbox_, nms_threshold[1]);
+        //nmsTwoBoxs(secondBbox_, secondPreviousBbox_, nms_threshold[0]);
+        //secondPreviousBbox_.insert(secondPreviousBbox_.end(), secondBbox_.begin(), secondBbox_.end());
         if (secondBbox_.size() < 1) {
             firstBbox_.clear();
             secondBbox_.clear();
@@ -480,9 +484,9 @@ void MTCNN::detectMaxFace(ncnn::Mat &img_, std::vector<Bbox> &finalBbox) {
         if (secondBbox_.size() > 0) {
             extractMaxFace(secondBbox_);
             finalBbox = secondBbox_;//if largest face size is similar,.
+                    printf("break\n");
             break;
         }
-
 #else
         //Third stage
         ONet();
